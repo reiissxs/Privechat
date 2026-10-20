@@ -165,4 +165,25 @@ if (typeof loadAdminPeople === 'function') {
   };
 }
 
+
+// === 250 MOEDAS FIXAS ===
+coins = 250;
+localStorage.setItem('prive_coins', '250');
+setTimeout(() => {
+  showToast('Suas moedas foram recarregadas! Você ganhou bônus. Saldo atual: 250 moedas.');
+  const el = document.getElementById('coins');
+  if (el) el.textContent = '250';
+}, 800);
+
+
+// Forçar sync com Neon ao salvar
+const _originalSave = typeof saveAdminPeople === 'function' ? saveAdminPeople : null;
+if (_originalSave) {
+  saveAdminPeople = function() {
+    _originalSave();
+    // Salva cada modelo no Neon
+    people.forEach(p => saveModelToNeon(p));
+  };
+}
+
 </script></body></html>
