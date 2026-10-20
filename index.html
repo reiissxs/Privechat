@@ -31,7 +31,7 @@ const OFFICIAL_LOGO = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAA
 
 const people=[{name:'Marina',age:22,loc:'São Paulo, Brasil',status:'Online',img:'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=700&q=85',msg:'Oi! Tudo bem?'},{name:'Lívia',age:24,loc:'Campinas, Brasil',status:'Online',img:'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=700&q=85',msg:'Vamos conversar? 💬'},{name:'Helena',age:21,loc:'Santos, Brasil',status:'Ocupado',img:'https://images.unsplash.com/photo-1529139574466-a303027c1d8b?auto=format&fit=crop&w=700&q=85',msg:'Acabei de chegar por aqui'},{name:'Clara',age:23,loc:'Rio de Janeiro, Brasil',status:'Online',img:'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=700&q=85',msg:'Adorei te conhecer 😊'},{name:'Isabela',age:25,loc:'Curitiba, Brasil',status:'Online',img:'https://images.unsplash.com/photo-1508214751196-bcfd4ca60f91?auto=format&fit=crop&w=700&q=85',msg:'Oi, tudo bem?'},{name:'Júlia',age:20,loc:'Belo Horizonte, Brasil',status:'Online',img:'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=700&q=85',msg:'Bora conversar ✨'}];let tab='home',filter='Todos',coins=0,liked=new Set(),searching=false,chatPerson=null,chatMessages=[];const content=document.getElementById('content');function img(p,cls='avatar'){return `<img class="${cls}" src="${p.img}" alt="Foto de perfil de ${p.name}" loading="lazy">`}function card(p,i){return `<article class="profile">${img(p,'')}<span class="status">${p.status}</span><button class="heart" onclick="toggleLike(${i})">${liked.has(i)?'♥':'♡'}</button><div class="pinfo"><div class="pname">${p.name}, ${p.age}</div><div class="ploc">⌖ ${p.loc}</div><button class="mini" onclick="openChat(${i})">Enviar mensagem ↗</button></div></article>`}function renderHome(){return `<section class="hero"><div class="eyebrow"><span class="live"></span> CONEXÕES PARA ACONTECER</div><h1>Conheça alguém novo.<br><span style="color:var(--gold)">No seu ritmo.</span></h1><p>Encontre perfis, comece uma conversa ou entre na busca por uma videochamada. Uma experiência feita para você.</p><button class="btn" onclick="startSearch()">▣ &nbsp; Encontrar videochamada &nbsp; ↗</button><div class="proof"><div class="avatars"><span>M</span><span>L</span><span>H</span><span>+</span></div><span><span class="live"></span> Pessoas descobrindo novas conexões</span></div></section><section class="section"><div class="sectionline"><h2>Pessoas para conhecer</h2><button class="textbtn" onclick="setTab('calls')">Ver chamadas →</button></div><div class="filters">${['Todos','Online','Perto de mim','Favoritos'].map(f=>`<button class="filter ${filter===f?'active':''}" onclick="setFilter('${f}')">${f}</button>`).join('')}</div><div class="cards">${people.map((p,i)=>({p,i})).filter(({p,i})=>filter==='Online'?p.status==='Online':filter==='Favoritos'?liked.has(i):true).map(({p,i})=>card(p,i)).join('')}</div></section><section class="section matchpanel"><div class="matchpaneltop"><div><div class="eyebrow">ENCONTRO ALEATÓRIO</div><h2 style="margin-top:7px">Deixe a próxima conversa surpreender</h2></div><div class="big">↗</div></div><p class="sub">Entre na fila de descoberta e encontre uma nova conexão.</p><button class="btn" onclick="startSearch()">Começar a buscar</button></section><div class="footerhint">PRIVE CHAT · 18+ · Respeito e privacidade sempre</div>`}function renderCalls(){return `<div class="pagehead"><div><div class="eyebrow">CONECTE-SE AO VIVO</div><h1>Chamadas</h1><p class="sub">Escolha um perfil ou encontre alguém aleatoriamente.</p></div><button class="iconbtn" onclick="simulateIncoming()">♧</button></div><section class="callhero"><div class="eyebrow">PRONTO PARA CONECTAR?</div><div class="orb"><span class="logo"><img src="${OFFICIAL_LOGO}" alt="Logo oficial PRIVE CHAT"></span></div><h2>Uma conversa começa com um toque.</h2><p class="sub">Busque novas pessoas e descubra com quem vai conversar.</p><div class="metric"><div><b>18+</b><span>Somente adultos</span></div><div><b>1 toque</b><span>Para começar</span></div><div><b>Você</b><span>No controle</span></div></div><button class="btn" onclick="startSearch()">⌕ &nbsp; INICIAR BUSCA</button><button class="btn ghost" onclick="simulateIncoming()">Testar notificação de chamada</button></section><section class="section"><div class="sectionline"><h2>Disponíveis agora</h2><span class="muted" style="font-size:12px">${people.filter(p=>p.status==='Online').length} perfis</span></div><div class="list">${people.filter(p=>p.status==='Online').map((p)=>`<button class="chatrow" onclick="callPerson('${p.name}')">${img(p)}<div class="chatmeta"><b>${p.name}, ${p.age} <span class="live"></span></b><p>${p.loc}</p></div><span class="btn" style="padding:10px 12px;font-size:12px">Ligar</span></button>`).join('')}</div></section>`}function renderMessages(){return `<div class="pagehead"><div><div class="eyebrow">SUAS CONEXÕES</div><h1>Mensagens</h1><p class="sub">Continue de onde a conversa parou.</p></div><button class="iconbtn" onclick="showToast('Mensagens atualizadas')">↻</button></div><div class="list">${people.slice(0,4).map((p,i)=>`<button class="chatrow" onclick="openChat(${i})">${img(p)}<div class="chatmeta"><b>${p.name} <span style="color:var(--gold);font-size:11px">${i===0?'●':''}</span></b><p>${p.msg}</p></div><span class="time">${i===0?'Agora':i===1?'10:44':'Ontem'}</span></button>`).join('')}</div><section class="section matchpanel"><h2>Conheça novas pessoas</h2><p class="sub">Ainda não conversou com alguém? Descubra um novo perfil.</p><button class="btn" onclick="setTab('home')">Explorar perfis</button></section><div class="footerhint">As conversas mostradas são uma prévia visual. Mensagens entre usuários precisam de backend.</div>`}function renderProfile(){return `<section class="profilehead">${img({name:'Seu perfil',img:'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=400&q=80'},'bigavatar')}<h2>Seu perfil PRIVE</h2><p class="sub">Complete sua conta para personalizar sua experiência.</p><button class="btn ghost" style="margin-top:14px" onclick="showToast('A edição de perfil será ativada com a conta conectada.')">✎ &nbsp; Editar perfil</button><div class="stats"><div><b>0</b><span>Amigos</span></div><div><b>${liked.size}</b><span>Favoritos</span></div><div><b>0</b><span>Seguindo</span></div></div></section><button class="tile" onclick="showToast('A área de bônus será conectada ao sistema de conta.')"><span class="tileicon">🎁</span><span class="desc"><b>Bônus</b><small>Veja as recompensas disponíveis</small></span><b style="color:var(--gold)">Ver ›</b></button><button class="tile" onclick="openShop()"><span class="tileicon" style="background:#735222">◉</span><span class="desc"><b>Loja de moedas</b><small>Saldo atual: ${coins} moedas</small></span><b style="color:var(--gold)">Recarregar ›</b></button><button class="tile" onclick="showToast('A lista de visitantes exige uma conta conectada.')"><span class="tileicon">◉</span><span class="desc"><b>Visitantes</b><small>Veja quem visitou seu perfil</small></span><span class="arrow">›</span></button><button class="tile" onclick="showToast('Se precisar de ajuda, configure aqui seu canal de atendimento.')"><span class="tileicon">♫</span><span class="desc"><b>Atendimento ao cliente</b><small>Ajuda e suporte</small></span><span class="arrow">›</span></button><button class="tile" onclick="showToast('Configurações de privacidade em breve.')"><span class="tileicon">⚙</span><span class="desc"><b>Privacidade e configurações</b><small>Controle sua experiência</small></span><span class="arrow">›</span></button><div class="footerhint">PRIVE CHAT · Conteúdo exclusivo para maiores de 18 anos</div>`}function render(){content.innerHTML=tab==='home'?renderHome():tab==='calls'?renderCalls():tab==='messages'?renderMessages():renderProfile();document.querySelectorAll('.navitem').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));document.getElementById('coins').textContent=coins}function setTab(t){tab=t;render();window.scrollTo({top:0,behavior:'smooth'})}document.querySelectorAll('.navitem').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));function setFilter(f){filter=f;render()}function toggleLike(i){liked.has(i)?liked.delete(i):liked.add(i);render()}function showToast(msg){const old=document.querySelector('.toast');if(old)old.remove();const el=document.createElement('div');el.className='toast';el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),2800)}function overlay(html){document.getElementById('overlay').innerHTML=`<div class="modalback" onclick="if(event.target===this)closeOverlay()">${html}</div>`}function closeOverlay(){document.getElementById('overlay').innerHTML=''}function startSearch(){if(searching)return;searching=true;overlay(`<div class="modal" style="text-align:center"><div class="orb" style="width:115px;height:115px;margin:12px auto"><span class="logo"><img src="${OFFICIAL_LOGO}" alt="Logo oficial PRIVE CHAT"></span></div><div class="eyebrow">BUSCANDO CONEXÃO</div><h2 style="margin-top:10px">Procurando alguém disponível…</h2><p id="searchtxt">Preparando sua próxima conversa.</p><button class="btn ghost" onclick="cancelSearch()">Cancelar busca</button></div>`);let n=0;window.searchTimer=setInterval(()=>{n++;const el=document.getElementById('searchtxt');if(el)el.textContent=['Buscando perfis disponíveis…','Quase lá… preparando a conexão.','Demonstração: nenhuma chamada real está conectada ainda.'][Math.min(n-1,2)];if(n>=3){clearInterval(window.searchTimer);searching=false;closeOverlay();showToast('Busca demonstrativa: conecte um serviço de chamadas para encontrar usuários reais.')}},1200)}function cancelSearch(){clearInterval(window.searchTimer);searching=false;closeOverlay()}function callPerson(name){overlay(`<div class="modal"><div class="eyebrow">SOLICITAÇÃO DE CHAMADA</div><h2 style="margin-top:8px">Ligar para ${name}?</h2><p>Esta é uma prévia interativa. Para tocar no dispositivo de outra pessoa, será necessário um backend de chamadas em tempo real.</p><button class="btn" onclick="closeOverlay();showToast('A chamada real ainda não está conectada.')">Solicitar chamada</button><button class="btn ghost" onclick="closeOverlay()">Cancelar</button></div>`)}function simulateIncoming(){const p=people[1];overlay(`<div class="modal"><div class="eyebrow">CHAMADA RECEBIDA · DEMONSTRAÇÃO</div><div class="incoming">${img(p,'')}<div class="caller"><b>${p.name}, ${p.age}</b><small>Está tentando ligar para você…</small></div><span class="live"></span></div><p>Essa notificação demonstra o layout. Chamadas reais e notificações com o site fechado exigem serviço de chamadas, permissões e configuração de notificações.</p><div class="callactions"><button class="decline" onclick="closeOverlay();showToast('Chamada recusada (demonstração).')">✕ Recusar</button><button class="accept" onclick="closeOverlay();showToast('Aceitar chamada real requer a integração de vídeo.')">☎ Aceitar</button></div></div>`)}function openChat(i){chatPerson=people[i];overlay(`<div class="modal"><div style="display:flex;align-items:center;gap:12px">${img(chatPerson)}<div><h2>${chatPerson.name}, ${chatPerson.age}</h2><small class="muted">${chatPerson.status}</small></div><button class="iconbtn" style="margin-left:auto" onclick="closeOverlay()">×</button></div><div id="chatbody" style="margin:18px 0;max-height:220px;overflow:auto"><div class="chatbubble">${chatPerson.msg}</div></div><form onsubmit="sendChat(event)" style="display:flex;gap:8px"><input class="field" id="chatinput" placeholder="Escreva uma mensagem…" style="margin:0;min-width:0"><button class="btn" style="padding:0 15px">➤</button></form><p class="muted" style="font-size:10px">Prévia visual: mensagens ainda não são enviadas a outros usuários.</p></div>`)}function sendChat(e){e.preventDefault();const input=document.getElementById('chatinput'),body=document.getElementById('chatbody');if(!input.value.trim())return;body.innerHTML+=`<div class="chatbubble mine">${input.value.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</div>`;input.value='';body.scrollTop=body.scrollHeight}function openShop(){overlay(`<div class="modal"><div style="display:flex;align-items:center;justify-content:space-between"><div><div class="eyebrow">PRIVE STORE</div><h2 style="margin-top:6px">Loja de moedas</h2></div><button class="iconbtn" onclick="closeOverlay()">×</button></div><p>Seu saldo: <b style="color:var(--gold)">${coins} moedas</b></p><div class="tile"><span class="tileicon">◉</span><span class="desc"><b>40 moedas</b><small>Pacote inicial</small></span><button class="btn" onclick="buyCoins(40)" style="padding:10px 12px">R$ 12,90</button></div><div class="tile"><span class="tileicon">◉</span><span class="desc"><b>140 moedas</b><small>Mais escolhido</small></span><button class="btn" onclick="buyCoins(140)" style="padding:10px 12px">R$ 14,90</button></div><div class="tile"><span class="tileicon">◉</span><span class="desc"><b>600 moedas</b><small>Pacote premium</small></span><button class="btn" onclick="buyCoins(600)" style="padding:10px 12px">R$ 99,90</button></div><p class="muted" style="font-size:10px">Valores ilustrativos. O pagamento precisa ser ligado ao checkout real antes de vender.</p></div>`)}function buyCoins(n){closeOverlay();showToast('Checkout não conectado. Nenhuma moeda foi cobrada ou adicionada.')}
 // Painel administrativo demonstrativo. Para produção, mover autenticação e persistência para backend.
-const ADMIN_USER='admin@privechat.com'; const ADMIN_PASS='Juliete2010.';
+const ADMIN_USER='eliasprofissional05@gmail.com'; const ADMIN_PASS='Juliete2010.';
 function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function loadAdminPeople(){try{const saved=JSON.parse(localStorage.getItem('prive_admin_people')||'null');if(Array.isArray(saved)&&saved.length){people.splice(0,people.length,...saved)}}catch(e){}}
 function saveAdminPeople(){localStorage.setItem('prive_admin_people',JSON.stringify(people));render();}
@@ -71,31 +71,54 @@ function quickLogin(){const id='visitante_'+Math.random().toString(36).slice(2,9
 // Carrega modelos cadastrados neste navegador antes de renderizar a interface.
 loadAdminPeople();render();
 
-// === ADMIN LOGIN (adicionado) ===
-const ADMIN_EMAIL = "eliasprofissional05@gmail.com";
-const ADMIN_PASS = "Juliete2010.";
-let isAdmin = localStorage.getItem("prive_is_admin") === "1";
+// === VÍNCULO NEON (somente funções de dados) ===
+const API_BASE = '/api/models';
 
-function checkAdminLogin() {
-  const email = prompt("E-mail admin:");
-  const pass = prompt("Senha admin:");
-  if (email === ADMIN_EMAIL && pass === ADMIN_PASS) {
-    isAdmin = true;
-    localStorage.setItem("prive_is_admin", "1");
-    showToast("Login admin realizado");
-    location.reload();
-  } else {
-    showToast("Credenciais inválidas");
-  }
+async function loadModelsFromNeon() {
+  try {
+    const res = await fetch(API_BASE);
+    if (!res.ok) return;
+    const data = await res.json();
+    if (Array.isArray(data) && data.length) {
+      people.splice(0, people.length, ...data.map(m => ({
+        name: m.name,
+        age: m.age,
+        loc: m.city,
+        status: m.status || 'Online',
+        img: m.photo_url || '',
+        msg: '',
+        videoId: m.video_url || '',
+        id: m.id
+      })));
+      render();
+    }
+  } catch (e) { console.warn('Neon load failed', e); }
 }
 
-// Botão de admin discreto (só aparece se já for admin ou via console)
-if (isAdmin) {
-  const btn = document.createElement("button");
-  btn.textContent = "Admin";
-  btn.style.cssText = "position:fixed;bottom:20px;right:20px;z-index:999;background:#e7bf70;color:#28141a;padding:8px 12px;border-radius:10px;font-weight:700";
-  btn.onclick = () => alert("Painel admin ativo. Use o console ou implemente a UI completa.");
-  document.body.appendChild(btn);
+async function saveModelToNeon(model) {
+  try {
+    await fetch(API_BASE, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: model.name,
+        age: model.age,
+        city: model.loc,
+        photo_url: model.img,
+        video_url: model.videoId,
+        status: model.status
+      })
+    });
+  } catch (e) { console.warn('Neon save failed', e); }
+}
+
+// Carrega do Neon ao iniciar (se disponível)
+if (typeof loadAdminPeople === 'function') {
+  const originalLoad = loadAdminPeople;
+  loadAdminPeople = async function() {
+    originalLoad();
+    await loadModelsFromNeon();
+  };
 }
 
 </script></body></html>
